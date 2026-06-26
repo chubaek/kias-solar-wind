@@ -413,6 +413,64 @@ Simplified CME residual experiment results:
 
 Thus CME residual correction is explicitly not part of the final model.
 
+### 10. Multihorizon CME/context residual correction
+
+After the corrected 72h block multi-horizon formulation was finalized, a
+second CME/context residual correction was tested with the proper task
+definition.
+
+Script:
+
+```text
+run_multihorizon_correction_72h_blocks.py
+```
+
+Output directory:
+
+```text
+outputs/multihorizon_correction_72h_blocks/
+```
+
+Correction setup:
+
+```text
+horizon-aware residual correction for h=1..72
+one pooled residual model over origin-horizon rows
+small selected context subset from the final base feature table
+causal recent CME windows
+causal CME ETA-to-target-window features
+```
+
+Public fixed validation:
+
+| Model | N | MAE | RMSE | CC |
+|---|---:|---:|---:|---:|
+| Base multihorizon only | 17,292 | 52.6397 | 69.2445 | 0.640828 |
+| Base + horizon-aware CME/context correction | 17,292 | 64.4300 | 81.0352 | 0.564314 |
+
+Private diagnostic:
+
+| Model | N | MAE | RMSE | CC |
+|---|---:|---:|---:|---:|
+| Base multihorizon only | 17,280 | 51.1626 | 73.3121 | 0.717528 |
+| Base + horizon-aware CME/context correction | 17,280 | 56.9590 | 78.2982 | 0.674677 |
+
+Selection result:
+
+```text
+Adopt correction: False
+Reason: public/private metrics worsened relative to the base model.
+```
+
+The correction experiment is documented but is not part of the final selected
+model. The final model remains:
+
+```text
+current tabular + representative_mrmr_ch
+0.70 * MLP_h + 0.30 * ExtraTrees_h
+h = 1..72 block forecast
+```
+
 ## 11. Repository / file organization
 
 Important scripts:
