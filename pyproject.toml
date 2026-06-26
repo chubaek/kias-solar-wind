@@ -1,0 +1,13 @@
+[project]
+name = "solar-wind"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "lightgbm>=4.6.0",
+    "scikit-learn>=1.9.0",
+    "scipy>=1.18.0",
+    "sunpy[all]>=7.1.2",
+    "torch>=2.12.1",
+]

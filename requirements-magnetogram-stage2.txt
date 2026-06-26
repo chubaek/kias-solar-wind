@@ -1,0 +1,11 @@
+# Minimal working dependency set for run_magnetogram_stage2_full.py.
+# This matches the existing .venv closely enough to run dry-run, validate,
+# download/extract, and evaluate paths without relying on uv.
+numpy==1.26.4
+pandas==2.3.3
+scipy==1.13.1
+scikit-learn==1.6.1
+astropy==6.0.1
+drms==0.7.1
+sunpy==5.1.5
+torch==2.6.0
