@@ -1190,3 +1190,116 @@ FINAL_REPORT_72H_BLOCK_MULTIHORIZON.md
 That report summarizes the final task definition, data, feature engineering,
 model scheme, splits, metrics, final results, sanity/leakage checks, rejected
 experiments, and file organization.
+
+## Multihorizon CME/context residual correction retry
+
+Timestamp:
+
+```text
+2026-06-26 KST
+```
+
+Implemented script:
+
+```text
+run_multihorizon_correction_72h_blocks.py
+```
+
+Purpose:
+
+```text
+Retry the correction model for the corrected final task:
+72h block multi-horizon forecast.
+```
+
+Base model:
+
+```text
+current final multihorizon ensemble
+0.70 * MLP_h + 0.30 * ExtraTrees_h for each h=1..72
+```
+
+Correction target:
+
+```text
+residual(t,h) = true Speed(t+h) - base_pred(t,h)
+corrected_pred(t,h) = base_pred(t,h) + residual_pred(t,h)
+```
+
+Correction model:
+
+```text
+horizon-aware pooled residual model using horizon_hour, base_pred,
+current/context features, representative_mrmr_ch, CME recent-window features,
+and ETA-to-target CME features
+```
+
+CME causality:
+
+```text
+only CME events with cme_time <= forecast_origin were used
+private labels were not used for correction training or selection
+```
+
+Public fixed validation:
+
+```text
+base_multihorizon_only:
+  N    = 17,292
+  MAE  = 52.639729
+  RMSE = 69.244519
+  CC   = 0.640828
+
+base_plus_horizon_cme_context_correction:
+  N    = 17,292
+  MAE  = 64.430012
+  RMSE = 81.035165
+  CC   = 0.564314
+```
+
+Private diagnostic:
+
+```text
+base_multihorizon_only:
+  N    = 17,280
+  MAE  = 51.162601
+  RMSE = 73.312121
+  CC   = 0.717528
+
+base_plus_horizon_cme_context_correction:
+  N    = 17,280
+  MAE  = 56.958972
+  RMSE = 78.298235
+  CC   = 0.674677
+```
+
+Selection result:
+
+```text
+Correction is not adopted.
+Reason: it worsened public fixed validation and also worsened private diagnostics.
+The final selected model remains the base 72h block multi-horizon ensemble.
+```
+
+Sanity checks:
+
+```text
+private target rows = 17,544
+missing private target timestamps = 0
+duplicate private target timestamps = 0
+forecast origin spacing = 72h
+horizon range = 1..72
+target_time = origin_time + horizon_hour
+all CME events used have cme_time <= origin_time
+private labels were not used for correction training
+h=72 base private CC = 0.567183913, matching the previous final h=72 reference
+```
+
+Output directory:
+
+```text
+outputs/multihorizon_correction_72h_blocks/
+```
+
+The final selected model remains the uncorrected 72h block multi-horizon base
+ensemble.
