@@ -1037,3 +1037,156 @@ The GitHub repository should contain source code, documentation, lightweight
 configuration, and experiment records. It should not contain raw data,
 downloaded FITS/magnetogram files, large generated outputs, local virtual
 environments, caches, or run logs.
+
+## Corrected Task: 72h Block Multihorizon Forecast
+
+Timestamp:
+
+```text
+2026-06-26 KST
+```
+
+Important problem-definition correction:
+
+```text
+The task is not an hourly rolling-origin Speed(t+72h) forecast.
+
+The task is:
+  issue one forecast every 72 hours
+  predict the full next 72-hour hourly speed profile
+  horizons h = 1, 2, ..., 72
+  concatenate non-overlapping forecast blocks
+```
+
+Implemented script:
+
+```text
+run_multihorizon_72h_blocks.py
+```
+
+Model family:
+
+```text
+For each horizon h:
+  MLP_h
+  ExtraTrees_h
+  ensemble_h = 0.70 * MLP_h + 0.30 * ExtraTrees_h
+
+Features:
+  current tabular lag/rolling features
+  + representative_mrmr_ch
+
+CME residual correction:
+  not used
+```
+
+Forecast/evaluation setup:
+
+```text
+Fixed public validation:
+  train target period = 2011-01-01 00:30 through 2021-12-31 23:30
+  validation target period = 2022-01-01 00:30 through 2023-12-31 23:30
+
+Private diagnostic:
+  train target period = 2011-01-01 00:30 through 2023-12-31 23:30
+  prediction target period = 2024-01-01 00:30 through 2025-12-31 23:30
+```
+
+Public fixed validation, 2022-2023:
+
+```text
+direct_mlp:
+  N    = 17,292
+  MAE  = 52.151457
+  RMSE = 68.983788
+  CC   = 0.648927
+
+extratrees:
+  N    = 17,292
+  MAE  = 49.634971
+  RMSE = 65.257940
+  CC   = 0.688737
+
+ensemble_0p7_mlp_0p3_extratrees:
+  N    = 17,292
+  MAE  = 50.661615
+  RMSE = 66.936198
+  CC   = 0.669880
+```
+
+Private diagnostic, 2024-2025:
+
+```text
+direct_mlp:
+  N    = 17,280
+  MAE  = 52.457317
+  RMSE = 75.065633
+  CC   = 0.703438
+
+extratrees:
+  N    = 17,280
+  MAE  = 52.113039
+  RMSE = 73.926865
+  CC   = 0.718296
+
+ensemble_0p7_mlp_0p3_extratrees:
+  N    = 17,280
+  MAE  = 51.162601
+  RMSE = 73.312121
+  CC   = 0.717528
+```
+
+Private yearly diagnostics for the ensemble:
+
+```text
+2024:
+  N    = 8,581
+  MAE  = 46.247362
+  RMSE = 65.281647
+  CC   = 0.577928
+
+2025:
+  N    = 8,699
+  MAE  = 56.011165
+  RMSE = 80.452119
+  CC   = 0.676448
+```
+
+Output files:
+
+```text
+outputs/multihorizon_72h_blocks/summary.csv
+outputs/multihorizon_72h_blocks/fixed_results.csv
+outputs/multihorizon_72h_blocks/private_diagnostic.csv
+outputs/multihorizon_72h_blocks/private_yearly_diagnostic.csv
+outputs/multihorizon_72h_blocks/horizon_metrics.csv
+outputs/multihorizon_72h_blocks/block_metrics.csv
+outputs/multihorizon_72h_blocks/best_private_prediction.csv
+outputs/multihorizon_72h_blocks/origin_target_mapping.csv
+outputs/multihorizon_72h_blocks/timestamp_sanity_check.csv
+outputs/multihorizon_72h_blocks/config.json
+```
+
+Sanity-check result:
+
+```text
+best_private_prediction.csv rows = 17,544
+first target timestamp = 2024-01-01 00:30:00
+last target timestamp  = 2025-12-31 23:30:00
+duplicate target timestamps = 0
+all private target timestamps covered exactly once = True
+all feature timestamps <= forecast origin = True
+```
+
+## Detailed Final Report Pointer
+
+The comprehensive final documentation for the corrected 72h block
+multi-horizon forecasting task is:
+
+```text
+FINAL_REPORT_72H_BLOCK_MULTIHORIZON.md
+```
+
+That report summarizes the final task definition, data, feature engineering,
+model scheme, splits, metrics, final results, sanity/leakage checks, rejected
+experiments, and file organization.
